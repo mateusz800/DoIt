@@ -6,7 +6,7 @@ import androidx.room.Room;
 
 import com.example.todo.persistence.AppDatabase;
 import com.example.todo.persistence.dao.TaskDao;
-import com.example.todo.ui.repository.TaskRepository;
+import com.example.todo.repository.TaskRepository;
 
 import javax.inject.Singleton;
 

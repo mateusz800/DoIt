@@ -1,4 +1,4 @@
-package com.example.todo.ui.repository;
+package com.example.todo.repository;
 
 import com.example.todo.persistence.dao.TaskDao;
 import com.example.todo.model.Task;
@@ -19,8 +19,14 @@ public class TaskRepository {
         return taskDao.getAllTasks();
     }
 
-    public void insertTask(Task task){
+    public void insertTask(Task task) {
         taskDao.insert(task)
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+    }
+
+    public void removeTask(Task task) {
+        taskDao.delete(task)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
     }

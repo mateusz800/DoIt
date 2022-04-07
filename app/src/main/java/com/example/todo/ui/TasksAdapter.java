@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,23 +23,30 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private CheckBox taskCheckBox;
+
+        private final CheckBox taskCheckBox;
+        private final TextView titleTextView;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            taskCheckBox = (CheckBox) itemView.findViewById(R.id.taskCheckBox);
+            taskCheckBox = itemView.findViewById(R.id.taskCheckBox);
+            titleTextView = itemView.findViewById(R.id.task_title_tv);
+            itemView.setOnClickListener(view -> {
+                taskCheckBox.toggle();
+            });
         }
 
-        public CheckBox getTaskCheckBox() {
-            return taskCheckBox;
+
+        public void updateTitle(String title) {
+            titleTextView.setText(title);
         }
     }
 
-    public TasksAdapter(){
+    public TasksAdapter() {
         taskList = new ArrayList<>();
     }
 
-    public TasksAdapter(List<Task> taskList){
+    public TasksAdapter(List<Task> taskList) {
         this.taskList = taskList;
     }
 
@@ -54,8 +62,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Task task = taskList.get(position);
-        CheckBox checkBox = holder.getTaskCheckBox();
-        checkBox.setText(task.getTitle());
+        holder.updateTitle(task.getTitle());
     }
 
 
@@ -64,6 +71,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
         return taskList.size();
     }
 
-
-
+    public Task dropTask(int position) {
+        Task removedTask = taskList.get(position);
+        notifyItemRemoved(position);
+        return removedTask;
+    }
 }

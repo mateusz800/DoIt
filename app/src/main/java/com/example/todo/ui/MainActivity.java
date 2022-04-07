@@ -1,17 +1,23 @@
 package com.example.todo.ui;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 
 import com.example.todo.viewModel.MainViewModel;
 import com.example.todo.R;
 import com.example.todo.model.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -44,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         compositeDisposable.dispose();
     }
 
-    private void initRecyclerView(){
+    private void initRecyclerView() {
         tasksRv = findViewById(R.id.rvTasks);
         TasksAdapter tasksAdapter = new TasksAdapter();
         tasksRv.setAdapter(tasksAdapter);
@@ -60,9 +66,29 @@ public class MainActivity extends AppCompatActivity {
                 });
         compositeDisposable.add(disposable);
 
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                TasksAdapter adapter = (TasksAdapter) tasksRv.getAdapter();
+                if (adapter != null) {
+                    Task task = adapter.dropTask(viewHolder.getAdapterPosition());
+                    viewModel.removeTask(task);
+                    //TODO: remove hardcoded string
+                    Snackbar.make(tasksRv, "Task removed", Snackbar.LENGTH_LONG).setAction("Undo", view -> {
+                        viewModel.saveTask(task);
+                    }).show();
+                }
+            }
+        }).attachToRecyclerView(tasksRv);
+
     }
 
-    private void showAddNewTaskDialog(){
+    private void showAddNewTaskDialog() {
         TaskEditDialog dialog = new TaskEditDialog(this, viewModel);
         dialog.show();
     }

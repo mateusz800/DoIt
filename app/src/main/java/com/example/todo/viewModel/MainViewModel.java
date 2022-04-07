@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.todo.util.TaskChangeListener;
 import com.example.todo.model.Task;
-import com.example.todo.ui.repository.TaskRepository;
+import com.example.todo.repository.TaskRepository;
 
 import java.util.List;
 
@@ -35,5 +35,10 @@ public class MainViewModel extends ViewModel implements TaskChangeListener {
     @Override
     public void saveTask(Task task) {
         taskRepository.insertTask(task);
+    }
+
+    @Override
+    public void removeTask(Task task) {
+        taskRepository.removeTask(task);
     }
 }
