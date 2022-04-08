@@ -7,6 +7,7 @@ import androidx.room.Room;
 import com.example.todo.persistence.AppDatabase;
 import com.example.todo.persistence.dao.TaskDao;
 import com.example.todo.repository.TaskRepository;
+import com.example.todo.ui.TasksAdapter;
 
 import javax.inject.Singleton;
 
@@ -35,5 +36,11 @@ public class ApplicationModule {
     @Singleton
     TaskRepository provideTaskRepository(TaskDao taskDao){
         return new TaskRepository(taskDao);
+    }
+
+    @Provides
+    @Singleton
+    TasksAdapter provideTasksAdapter(){
+        return new TasksAdapter();
     }
 }

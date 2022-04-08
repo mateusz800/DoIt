@@ -15,8 +15,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 
 public class TaskEditDialog extends Dialog {
-    private TaskChangeListener listener;
-    private Button taskSaveBtn;
+    private final TaskChangeListener listener;
     private TextInputEditText titleInput;
 
     private String title;
@@ -33,7 +32,7 @@ public class TaskEditDialog extends Dialog {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.dialog_task_edit);
         titleInput = findViewById(R.id.task_title_input);
-        taskSaveBtn = findViewById(R.id.btnTaskSave);
+        Button taskSaveBtn = findViewById(R.id.btnTaskSave);
         taskSaveBtn.setOnClickListener((view) -> this.saveTask());
     }
 

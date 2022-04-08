@@ -13,19 +13,20 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
-public class MainViewModel extends ViewModel implements TaskChangeListener {
+public class MainViewModel extends ViewModel
+        implements TaskChangeListener {
 
     TaskRepository taskRepository;
 
     @Inject
-    public MainViewModel(TaskRepository taskRepository){
+    public MainViewModel(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
     }
 
-
-    public MainViewModel(){ }
 
     public Flowable<List<Task>> getAllTasks() {
         return taskRepository.getAllTasks();
@@ -41,4 +42,16 @@ public class MainViewModel extends ViewModel implements TaskChangeListener {
     public void removeTask(Task task) {
         taskRepository.removeTask(task);
     }
+
+    public void listenForTasksOrderChange(Flowable<List<Task>> tasksFlowable) {
+        tasksFlowable.subscribeOn(Schedulers.io())
+                .subscribe(list -> Observable.fromIterable(list)
+                        .subscribe(task -> {
+                            task.setOrder(list.indexOf(task));
+                            taskRepository.updateTask(task);
+                        })
+                );
+
+    }
+
 }

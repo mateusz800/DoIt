@@ -15,11 +15,18 @@ import com.example.todo.R;
 import com.example.todo.model.Task;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import io.reactivex.rxjava3.core.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
 
-    private List<Task> taskList;
+    private final List<Task> taskList;
+    private Task lastlyRemovedTask;
+    private final PublishSubject<List<Task>> orderObservable = PublishSubject.create();
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -73,7 +80,38 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
 
     public Task dropTask(int position) {
         Task removedTask = taskList.get(position);
+        taskList.remove(removedTask);
         notifyItemRemoved(position);
+        lastlyRemovedTask = removedTask;
         return removedTask;
+    }
+
+    public void changeTaskOrder(int from, int to) {
+        Collections.swap(taskList, from, to);
+        notifyItemMoved(from, to);
+    }
+
+    public Flowable<List<Task>> getTasksOrderObservable() {
+        return orderObservable.toFlowable(BackpressureStrategy.LATEST);
+    }
+
+    public void saveTaskOrder() {
+        orderObservable.onNext(taskList);
+    }
+
+    public void setTaskList(List<Task> tasks) {
+        System.out.println("ok");
+        for(int i=0; i<tasks.size();i++){
+            Task task = tasks.get(i);
+            int index = this.taskList.indexOf(task);
+            if (index < 0) {
+                if(task.getOrder() != null){
+                    this.taskList.add(i, task);
+                } else {
+                    this.taskList.add(task);
+                }
+                notifyItemInserted(this.taskList.indexOf(task));
+            }
+        }
     }
 }

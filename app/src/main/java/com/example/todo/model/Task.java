@@ -1,41 +1,71 @@
 package com.example.todo.model;
 
-import androidx.room.ColumnInfo;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+
+import java.util.Objects;
 
 @Entity(tableName = "task")
 public class Task {
     @PrimaryKey(autoGenerate = true)
     private long id;
+    private Integer order;
+    @NonNull
     private String title;
     private boolean status;
 
-    public Task(String title){
+
+    public Task(String title) {
         this.title = title;
         this.status = false;
     }
 
-    public void setId(long id){
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Task)) {
+            return false;
+        }
+        Task task = (Task) obj;
+        return task.getId() == this.id &&
+                task.getTitle().equals(this.title) &&
+                Objects.equals(task.getOrder(), this.order);
+    }
+
+    public void setId(long id) {
         this.id = id;
     }
-    public long getId(){
+
+    public long getId() {
         return id;
     }
 
-    public void setTitle(String title){
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setTitle(String title) {
         this.title = title;
     }
 
-    public String getTitle(){
+    public String getTitle() {
         return title;
     }
 
-    public void setStatus(boolean status){
+    public void setStatus(boolean status) {
         this.status = status;
     }
 
-    public boolean getStatus(){
+    public boolean getStatus() {
         return status;
     }
+
 }
