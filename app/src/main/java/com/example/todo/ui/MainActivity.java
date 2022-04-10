@@ -2,6 +2,7 @@ package com.example.todo.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,9 +11,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.view.View;
 
+import com.example.todo.databinding.ActivityMainBinding;
 import com.example.todo.viewModel.MainViewModel;
 import com.example.todo.R;
 import com.example.todo.model.Task;
+import com.example.todo.viewModel.TaskViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -37,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        setContentView(R.layout.activity_main);
+        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding.setViewModel(viewModel);
         compositeDisposable = new CompositeDisposable();
         noTasksView = findViewById(R.id.no_tasks_view);
         initRecyclerView();
@@ -59,22 +63,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void initRecyclerView() {
         tasksRv = findViewById(R.id.rvTasks);
-        TasksAdapter tasksAdapter = new TasksAdapter();
+        TasksAdapter tasksAdapter = new TasksAdapter(viewModel.getTaskViewModelsList());
         tasksRv.setAdapter(tasksAdapter);
         viewModel.listenForTasksOrderChange(tasksAdapter.getTasksOrderObservable());
         tasksRv.setLayoutManager(new LinearLayoutManager(this));
-        Disposable disposable = viewModel.getAllTasks()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(tasks -> {
-                    if (tasks.size() > 0) {
-                        tasksAdapter.setTaskList(tasks);
-                        noTasksView.setVisibility(View.INVISIBLE);
-                    } else {
-                        noTasksView.setVisibility(View.VISIBLE);
-                    }
-                });
-        compositeDisposable.add(disposable);
 
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
@@ -90,12 +82,12 @@ public class MainActivity extends AppCompatActivity {
                 if (adapter != null) {
                     int fromPosition = viewHolder.getAdapterPosition();
                     int toPosition = target.getAdapterPosition();
-                    if(fromPosition < toPosition){
-                        if(toPosition < adapter.getItemCount() -1){
+                    if (fromPosition < toPosition) {
+                        if (toPosition < adapter.getItemCount() - 1) {
                             toPosition += 1;
                         }
                     }
-                    adapter.changeTaskOrder(fromPosition, toPosition);
+                    adapter.notifyAboutOrderChange(fromPosition, toPosition);
                     return true;
                 }
                 return false;
@@ -105,13 +97,15 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 TasksAdapter adapter = (TasksAdapter) tasksRv.getAdapter();
                 if (adapter != null) {
-                    Task task = adapter.dropTask(viewHolder.getAdapterPosition());
-                    viewModel.removeTask(task);
-                    //TODO: remove hardcoded string
-                    Snackbar.make(tasksRv, "Task removed", Snackbar.LENGTH_LONG).setAction("Undo", view -> {
-                        viewModel.saveTask(task);
-                    }).show();
+                    adapter.saveTaskOrder();
                 }
+                TasksAdapter.ViewHolder taskViewHolder = (TasksAdapter.ViewHolder) viewHolder;
+                TaskViewModel taskViewModel = taskViewHolder.getViewModel();
+                taskViewModel.removeTask();
+                //TODO: remove hardcoded string
+                Snackbar.make(tasksRv, "Task removed", Snackbar.LENGTH_LONG).setAction("Undo", view -> {
+                    taskViewModel.restoreTask();
+                }).show();
             }
         }).attachToRecyclerView(tasksRv);
 

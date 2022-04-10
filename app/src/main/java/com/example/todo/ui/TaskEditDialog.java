@@ -9,21 +9,21 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 
 import com.example.todo.R;
-import com.example.todo.util.TaskChangeListener;
 import com.example.todo.model.Task;
+import com.example.todo.viewModel.MainViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 
 
 public class TaskEditDialog extends Dialog {
-    private final TaskChangeListener listener;
+    private final MainViewModel viewModel;
     private TextInputEditText titleInput;
 
     private String title;
 
 
-    public TaskEditDialog(@NonNull Context context, @NonNull TaskChangeListener listener ) {
+    public TaskEditDialog(@NonNull Context context, @NonNull MainViewModel viewModel) {
         super(context);
-        this.listener = listener;
+        this.viewModel = viewModel;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class TaskEditDialog extends Dialog {
 
     private void saveTask(){
         if(verifyData()) {
-            listener.saveTask(new Task(title));
+            viewModel.saveTask(new Task(title));
             this.dismiss();
         }
     }
