@@ -38,10 +38,11 @@
 
                 <TextView
                     android:id="@+id/task_title_tv"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@{viewModel.task.status ? @drawable/strike_through : null}"
                     android:text="@{viewModel.task.title}"
-                    tools:text="Do some task"/>
+                    tools:text="Do some task" />
             </LinearLayout>
         </LinearLayout>
 

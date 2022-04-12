@@ -15,6 +15,7 @@ import com.example.todo.viewModel.TaskViewModel;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.BackpressureStrategy;
@@ -22,10 +23,10 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
-    private ObservableList<TaskViewModel> taskList;
+    ObservableList<TaskViewModel> taskList;
     private final PublishSubject<List<Task>> orderObservable = PublishSubject.create();
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemTaskBinding binding;
 
@@ -33,7 +34,12 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
             super(binding.getRoot());
             this.binding = binding;
             itemView.setOnClickListener(view -> {
-                binding.getViewModel().toggleTaskStatus();
+                TaskViewModel taskViewModel = binding.getViewModel();
+                Task task = taskViewModel.getTask().get();
+                if(task != null) {
+                    saveTaskOrder();
+                    taskViewModel.toggleTaskStatus();
+                }
             });
         }
 
@@ -116,5 +122,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
                 .map(viewModel -> viewModel.getTask().get())
                 .collect(Collectors.toList())
         );
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return Objects.requireNonNull(taskList.get(position).getTask().get()).getId();
     }
 }
