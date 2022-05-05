@@ -1,5 +1,6 @@
 package com.example.todo.persistence.dao;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -17,11 +18,15 @@ import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface TaskDao {
+    @VisibleForTesting
     @Query("SELECT * FROM task ORDER BY `order`")
-    Flowable<List<Task>> getAllTasks();
+    Flowable<List<Task>> selectAll();
 
     @Query("SELECT * FROM task WHERE `order` > :fromPosition AND `order` < :toPosition")
     Single<List<Task>> getAllTasksInPositionRange(int fromPosition, int toPosition);
+
+    @Query("SELECT * FROM task WHERE id = :id")
+    Maybe<Task> getTaskById(long id);
 
     @Insert(entity = Task.class)
     Maybe<Long> insert(Task task);

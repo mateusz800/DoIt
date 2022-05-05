@@ -8,5 +8,5 @@ import com.example.todo.model.Task;
 
 @Database(entities = {Task.class}, version = 1)
  public abstract class AppDatabase extends RoomDatabase {
-    public abstract TaskDao taskDao();
+    public abstract TaskDao getTaskDao();
 }

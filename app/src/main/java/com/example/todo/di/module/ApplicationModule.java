@@ -2,15 +2,11 @@ package com.example.todo.di.module;
 
 import android.content.Context;
 
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Room;
 
 import com.example.todo.persistence.AppDatabase;
 import com.example.todo.persistence.dao.TaskDao;
 import com.example.todo.repository.TaskRepository;
-import com.example.todo.ui.TasksAdapter;
-import com.example.todo.viewModel.MainViewModel;
 
 import javax.inject.Singleton;
 
@@ -32,7 +28,7 @@ public class ApplicationModule {
     @Provides
     @Singleton
     TaskDao provideTaskDao(AppDatabase db){
-        return db.taskDao();
+        return db.getTaskDao();
     }
 
     @Provides

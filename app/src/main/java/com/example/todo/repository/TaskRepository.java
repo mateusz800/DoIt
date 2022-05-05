@@ -17,7 +17,7 @@ public class TaskRepository {
     }
 
     public Flowable<List<Task>> getAllTasks() {
-        return taskDao.getAllTasks();
+        return taskDao.selectAll();
     }
 
     public Single<List<Task>> getAllTasksInPositionRange(int positionFrom, int positionTo){

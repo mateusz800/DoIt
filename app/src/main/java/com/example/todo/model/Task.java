@@ -16,7 +16,6 @@ public class Task {
     private String title;
     private boolean status;
 
-
     public Task(String title) {
         this.title = title;
         this.status = false;
