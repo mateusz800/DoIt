@@ -1,4 +1,4 @@
-package com.example.todo;
+package com.example.todo.di;
 
 import android.app.Application;
 import android.content.Context;

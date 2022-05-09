@@ -2,10 +2,12 @@ package com.example.todo.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.ObservableList;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
@@ -33,18 +35,28 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
         public ViewHolder(ItemTaskBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            itemView.setOnClickListener(view -> {
-                TaskViewModel taskViewModel = binding.getViewModel();
-                Task task = taskViewModel.getTask().get();
-                if(task != null) {
-                    saveTaskOrder();
-                    taskViewModel.toggleTaskStatus();
-                }
-            });
         }
 
         public void bind(TaskViewModel viewModel) {
             binding.setViewModel(viewModel);
+            TaskViewModel taskViewModel = binding.getViewModel();
+            ObservableList<TaskViewModel> subtasks = taskViewModel.getSubtasksViewModels();
+            binding.subtasksRv.setLayoutManager(new LinearLayoutManager(binding.subtasksRv.getContext()));
+            if (subtasks.size() > 0) {
+                if (binding.subtasksRv.getVisibility() != View.GONE) {
+                    TasksAdapter adapter = new TasksAdapter(subtasks);
+                    binding.subtasksRv.setAdapter(adapter);
+                    binding.subtasksRv.setVisibility(View.VISIBLE);
+                } else {
+                    binding.subtasksRv.setVisibility(View.GONE);
+                }
+            }
+            itemView.setOnClickListener(view -> {
+                Task task = taskViewModel.getTask().get();
+                if (task != null) {
+                    taskViewModel.toggleTaskStatus();
+                }
+            });
         }
 
         public TaskViewModel getViewModel() {
@@ -54,6 +66,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
 
     public TasksAdapter(ObservableList<TaskViewModel> taskList) {
         this.taskList = taskList;
+        setHasStableIds(true);
         this.taskList.addOnListChangedCallback(new ObservableList.OnListChangedCallback<ObservableList<TaskViewModel>>() {
             @Override
             public void onChanged(ObservableList<TaskViewModel> sender) {
@@ -109,7 +122,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
 
     public void notifyAboutOrderChange(int from, int to) {
         notifyItemMoved(from, to);
-        Collections.swap(this.taskList, from , to);
+        Collections.swap(this.taskList, from, to);
     }
 
 

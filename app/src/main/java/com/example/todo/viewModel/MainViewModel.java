@@ -1,10 +1,11 @@
 package com.example.todo.viewModel;
 
+import android.util.Log;
+
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableField;
 import androidx.databinding.ObservableList;
 import androidx.lifecycle.ViewModel;
-
 
 import com.example.todo.model.Task;
 import com.example.todo.repository.TaskRepository;
@@ -19,13 +20,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class MainViewModel extends ViewModel {
+    private static final String TAG = "MainViewModel";
 
     private final TaskRepository taskRepository;
     private final ObservableList<TaskViewModel> taskViewModelsList = new ObservableArrayList<>();
@@ -35,8 +35,19 @@ public class MainViewModel extends ViewModel {
     @Inject
     public MainViewModel(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
+        //initSampleTasks();
         getAllTasks();
         observeChanges();
+    }
+    private void initSampleTasks(){
+        Task shoppingTask = new Task("shopping");
+        taskRepository.insertTaskAndGetId(shoppingTask)
+                .subscribeOn(Schedulers.io())
+                .subscribe(id -> {
+                    Task subtask1 = new Task("bread");
+                    subtask1.setParentId(id);
+                    taskRepository.insertTask(subtask1);
+                });
     }
 
     public ObservableList<TaskViewModel> getTaskViewModelsList() {
@@ -72,17 +83,19 @@ public class MainViewModel extends ViewModel {
     private void getAllTasks() {
         compositeDisposable.add(taskRepository.getAllTasks()
                 .subscribeOn(Schedulers.io())
-                .map(this::convertToViewModel)
+                .map(this::excludeSubtasksAndConvertToViewModel)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(taskViewModels -> {
                     this.taskViewModelsList.clear();
                     this.taskViewModelsList.addAll(taskViewModels);
-                }, System.out::println)
+                }, throwable -> Log.e(TAG, throwable.getMessage()))
         );
     }
 
-    private List<TaskViewModel> convertToViewModel(List<Task> tasks) {
+
+    private List<TaskViewModel> excludeSubtasksAndConvertToViewModel(List<Task> tasks) {
         return tasks.stream()
+                .filter(task -> task.getParentId() == null)
                 .map(task -> new TaskViewModel(new ObservableField<>(task), taskRepository))
                 .collect(Collectors.toList());
 

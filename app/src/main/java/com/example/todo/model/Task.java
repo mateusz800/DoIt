@@ -11,6 +11,7 @@ import java.util.Objects;
 public class Task {
     @PrimaryKey(autoGenerate = true)
     private long id;
+    private Long parentId;
     private Integer order;
     @NonNull
     private String title;
@@ -65,6 +66,14 @@ public class Task {
 
     public boolean getStatus() {
         return status;
+    }
+
+    public void setParentId(Long parentId){
+        this.parentId = parentId;
+    }
+
+    public Long getParentId(){
+        return parentId;
     }
 
 }

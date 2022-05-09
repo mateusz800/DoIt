@@ -22,6 +22,9 @@ public interface TaskDao {
     @Query("SELECT * FROM task ORDER BY `order`")
     Flowable<List<Task>> selectAll();
 
+    @Query("SELECT * FROM task WHERE parentId = :parentId ORDER BY `order`")
+    Flowable<List<Task>> getAllSubtasks(long parentId);
+
     @Query("SELECT * FROM task WHERE `order` > :fromPosition AND `order` < :toPosition")
     Single<List<Task>> getAllTasksInPositionRange(int fromPosition, int toPosition);
 
