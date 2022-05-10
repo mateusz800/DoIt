@@ -54,7 +54,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
             itemView.setOnClickListener(view -> {
                 Task task = taskViewModel.getTask().get();
                 if (task != null) {
-                    taskViewModel.toggleTaskStatus();
+                    taskViewModel.toggleTaskStatus(view);
+
                 }
             });
         }

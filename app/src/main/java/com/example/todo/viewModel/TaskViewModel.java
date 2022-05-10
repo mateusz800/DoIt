@@ -1,6 +1,8 @@
 package com.example.todo.viewModel;
 
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.databinding.ObservableArrayList;
 import androidx.databinding.ObservableField;
@@ -9,6 +11,7 @@ import androidx.databinding.ObservableList;
 import com.example.todo.model.Task;
 import com.example.todo.repository.TaskRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,15 +29,22 @@ public class TaskViewModel {
     private TaskRepository taskRepository;
 
 
-    public TaskViewModel(ObservableField<Task> task, TaskRepository taskRepository) {
+    public TaskViewModel(ObservableField<Task> task, List<TaskViewModel> subtasks, TaskRepository taskRepository) {
         this.taskObservable = task;
         this.taskRepository = taskRepository;
+        if(subtasks != null) {
+            this.subtasksObservable.addAll(subtasks);
+        }
         getSubtasks();
+    }
+    public TaskViewModel(ObservableField<Task> task, TaskRepository taskRepository) {
+        this(task, Collections.emptyList(), taskRepository);
     }
 
     public ObservableField<Task> getTask() {
         return taskObservable;
     }
+
 
     public ObservableList<TaskViewModel> getSubtasksViewModels() {
         return subtasksObservable;
@@ -73,12 +83,22 @@ public class TaskViewModel {
         }
     }
 
-    public void toggleTaskStatus() {
+    public void toggleTaskStatus(View view) {
         Task task = taskObservable.get();
-        if (task != null) {
-            boolean newStatus = !task.getStatus();
-            task.setStatus(newStatus);
-            taskRepository.updateTask(task);
-        }
+        taskRepository.getAllSubtasks(task.getId())
+                .observeOn(Schedulers.io())
+                .first(Collections.emptyList())
+                .subscribeOn(Schedulers.io())
+                .subscribe(list -> {
+                    if (list.stream().allMatch(Task::getStatus)) {
+                        boolean newStatus = !task.getStatus();
+                        task.setStatus(newStatus);
+                        taskRepository.updateTask(task);
+                    } else {
+                        view.post(() -> {
+                            Toast.makeText(view.getContext(), "You have some uncompleted task", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
     }
 }

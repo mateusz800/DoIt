@@ -10,7 +10,10 @@ import androidx.lifecycle.ViewModel;
 import com.example.todo.model.Task;
 import com.example.todo.repository.TaskRepository;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -39,7 +42,8 @@ public class MainViewModel extends ViewModel {
         getAllTasks();
         observeChanges();
     }
-    private void initSampleTasks(){
+
+    private void initSampleTasks() {
         Task shoppingTask = new Task("shopping");
         taskRepository.insertTaskAndGetId(shoppingTask)
                 .subscribeOn(Schedulers.io())
@@ -53,7 +57,8 @@ public class MainViewModel extends ViewModel {
     public ObservableList<TaskViewModel> getTaskViewModelsList() {
         return taskViewModelsList;
     }
-    public ObservableField<Integer> getCompletedTasks(){
+
+    public ObservableField<Integer> getCompletedTasks() {
         return completedTasks;
     }
 
@@ -64,8 +69,8 @@ public class MainViewModel extends ViewModel {
     }
 
     public void saveTask(Task task) {
-        if(task.getOrder() == null){
-            task.setOrder(taskViewModelsList.size()-1);
+        if (task.getOrder() == null) {
+            task.setOrder(taskViewModelsList.size() - 1);
         }
         taskRepository.insertTask(task);
     }
@@ -88,16 +93,40 @@ public class MainViewModel extends ViewModel {
                 .subscribe(taskViewModels -> {
                     this.taskViewModelsList.clear();
                     this.taskViewModelsList.addAll(taskViewModels);
-                }, throwable -> Log.e(TAG, throwable.getMessage()))
+                }, throwable -> {
+                    Log.e(TAG, throwable.getMessage());
+                    throwable.printStackTrace();
+                })
         );
     }
 
 
     private List<TaskViewModel> excludeSubtasksAndConvertToViewModel(List<Task> tasks) {
-        return tasks.stream()
-                .filter(task -> task.getParentId() == null)
-                .map(task -> new TaskViewModel(new ObservableField<>(task), taskRepository))
+        Map<Task, List<Task>> tasksOrdered = extractSubtasks(tasks);
+        return tasksOrdered.keySet().stream()
+                .map(key -> new TaskViewModel(new ObservableField<>(key),
+                        tasksOrdered.get(key).stream()
+                                .map(subtask -> new TaskViewModel(new ObservableField<>(subtask), null, taskRepository))
+                                .collect(Collectors.toList()),
+                        taskRepository))
                 .collect(Collectors.toList());
+    }
+
+    private Map<Task, List<Task>> extractSubtasks(List<Task> taskList) {
+        Map<Task, List<Task>> result = new HashMap<>();
+        taskList.forEach(task -> {
+            List<Task> subtasks = result.get(task);
+            if(task.getParentId() == null) {
+                if (subtasks == null) {
+                    subtasks = Collections.singletonList(task);
+                } else {
+                    subtasks.add(task);
+                }
+                result.put(task, subtasks);
+            }
+
+        });
+        return result;
 
     }
 

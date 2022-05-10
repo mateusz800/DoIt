@@ -4,10 +4,14 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.swipeRight;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withParent;
+import static org.hamcrest.Matchers.allOf;
 
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.espresso.matcher.ViewMatchers;
@@ -71,7 +75,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void isUndoBarDisplayed_onDeleteTask(){
+    public void isUndoBarDisplayed_onDeleteTask() {
         taskRepository.insertTaskAndGetId(new Task("Task")).blockingSubscribe();
         onView(withId(R.id.rvTasks))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, swipeRight()));
@@ -79,9 +83,32 @@ public class MainActivityTest {
                 .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
     }
 
-    /*
-    doesn't work
+    @Test
+    public void cannotCompleteTaskIfSubtasksNotCompleted_onItemClick() {
+        long id = taskRepository.insertTaskAndGetId(new Task("Task")).blockingGet();
+        Task subtask = new Task("subtask");
+        subtask.setParentId(id);
+        taskRepository.insertTaskAndGetId(subtask).blockingSubscribe();
+        onView(withId(R.id.rvTasks))
+                .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+        onView(allOf(withParent(withParent(withParent(withRecyclerView(R.id.rvTasks).atPosition(0)))), withId(R.id.taskCheckBox)))
+                .check(matches(isNotChecked()));
+    }
 
+    @Test
+    public void canCompleteTaskIfSubtasksCompleted_onItemClick() {
+        long id = taskRepository.insertTaskAndGetId(new Task("Task")).blockingGet();
+        Task subtask = new Task("subtask");
+        subtask.setParentId(id);
+        taskRepository.insertTaskAndGetId(subtask).blockingSubscribe();
+        onView(allOf(withId(R.id.subtasks_rv), withParent(withRecyclerView(R.id.rvTasks).atPosition(0))))
+               .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+        onView(withId(R.id.rvTasks))
+                .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+        onView(allOf(withParent(withParent(withParent(withRecyclerView(R.id.rvTasks).atPosition(0)))), withId(R.id.taskCheckBox)))
+                .check(matches(isChecked()));
+    }
+/*
     @Test
     public void areTasksReordered_onTaskDragAndDrop() {
         taskRepository.insertTaskAndGetId(new Task("task 1")).blockingSubscribe();
@@ -99,5 +126,5 @@ public class MainActivityTest {
         onView(withRecyclerView(R.id.rvTasks).atPosition(0))
                 .check(matches(withText("task 2")));
     }
-    */
+*/
 }
