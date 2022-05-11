@@ -19,8 +19,6 @@ import com.example.todo.viewModel.TaskViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.Objects;
-
 import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        ((TasksAdapter) Objects.requireNonNull(tasksRv.getAdapter())).saveTaskOrder();
+        //((TasksAdapter) Objects.requireNonNull(tasksRv.getAdapter())).saveTaskOrder();
     }
 
     private void initRecyclerView() {
@@ -63,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         TasksAdapter tasksAdapter = new TasksAdapter(viewModel.getTaskViewModelsList());
         tasksAdapter.setHasStableIds(true);
         tasksRv.setAdapter(tasksAdapter);
-        viewModel.listenForTasksOrderChange(tasksAdapter.getTasksOrderObservable());
+        //viewModel.listenForTasksOrderChange(tasksAdapter.getTasksOrderObservable());
         tasksRv.setLayoutManager(new LinearLayoutManager(this));
         RecyclerView.ItemAnimator animator = tasksRv.getItemAnimator();
         animator.setChangeDuration(0);
@@ -98,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                saveTaskOrder();
                 TasksAdapter.ViewHolder taskViewHolder = (TasksAdapter.ViewHolder) viewHolder;
                 TaskViewModel taskViewModel = taskViewHolder.getViewModel();
                 taskViewModel.removeTask();
@@ -112,15 +109,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddNewTaskDialog() {
-        saveTaskOrder();
         TaskEditDialog dialog = new TaskEditDialog(this, viewModel);
         dialog.show();
-    }
-
-    private void saveTaskOrder(){
-        TasksAdapter adapter = (TasksAdapter) tasksRv.getAdapter();
-        if (adapter != null) {
-            adapter.saveTaskOrder();
-        }
     }
 }

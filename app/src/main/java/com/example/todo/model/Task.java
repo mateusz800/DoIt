@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity(tableName = "task")
@@ -16,10 +17,13 @@ public class Task {
     @NonNull
     private String title;
     private boolean status;
+    private String description;
+    private String dateAdded;
 
     public Task(String title) {
         this.title = title;
         this.status = false;
+        dateAdded = LocalDateTime.now().toString();
     }
 
     @Override
@@ -74,6 +78,21 @@ public class Task {
 
     public Long getParentId(){
         return parentId;
+    }
+
+    public void setDescription(String description){
+        this.description = description;
+    }
+
+    public String getDescription(){
+        return description;
+    }
+
+    public void setDateAdded(String dateAdded){
+        this.dateAdded = dateAdded;
+    }
+    public String getDateAdded(){
+        return dateAdded;
     }
 
 }

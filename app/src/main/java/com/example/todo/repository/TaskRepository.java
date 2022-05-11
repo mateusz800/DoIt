@@ -20,21 +20,37 @@ public class TaskRepository {
     public Flowable<List<Task>> getAllTasks() {
         return taskDao.selectAll();
     }
-    public Flowable<List<Task>> getAllSubtasks(long parentId){
+
+    public Flowable<List<Task>> getAllSubtasks(long parentId) {
         return taskDao.getAllSubtasks(parentId);
     }
 
-    public Single<List<Task>> getAllTasksInPositionRange(int positionFrom, int positionTo){
+    public Single<List<Task>> getAllTasksInPositionRange(int positionFrom, int positionTo) {
         return taskDao.getAllTasksInPositionRange(positionFrom, positionTo);
     }
 
-    public void insertTask(Task task) {
-        taskDao.insert(task)
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+    public Maybe<Task> getTaskById(long taskId) {
+        return taskDao.getTaskById(taskId);
     }
 
-    public Maybe<Long> insertTaskAndGetId(Task task){
+    public void insertTask(Task task) {
+        if (task.getOrder() == null) {
+            taskDao.getTaskCount()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(count -> {
+                        task.setOrder(Math.toIntExact(count));
+                        taskDao.insert(task)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe();
+                    });
+        } else {
+            taskDao.insert(task)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe();
+        }
+    }
+
+    public Maybe<Long> insertTaskAndGetId(Task task) {
         return taskDao.insert(task);
 
     }
@@ -46,7 +62,7 @@ public class TaskRepository {
                 .subscribe();
     }
 
-    public void updateTask(Task task){
+    public void updateTask(Task task) {
         taskDao.update(task)
                 .subscribeOn(Schedulers.io())
                 .subscribe();

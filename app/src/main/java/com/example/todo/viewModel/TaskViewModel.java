@@ -25,6 +25,8 @@ public class TaskViewModel {
 
     private ObservableField<Task> taskObservable;
     private final ObservableArrayList<TaskViewModel> subtasksObservable = new ObservableArrayList<>();
+    private final ObservableField<Boolean> isViewExpanded = new ObservableField<>(false);
+    private final ObservableField<Boolean> hasDetails = new ObservableField<>(false);
     private Task lastlyRemovedTask;
     private TaskRepository taskRepository;
 
@@ -32,11 +34,13 @@ public class TaskViewModel {
     public TaskViewModel(ObservableField<Task> task, List<TaskViewModel> subtasks, TaskRepository taskRepository) {
         this.taskObservable = task;
         this.taskRepository = taskRepository;
-        if(subtasks != null) {
+        if (subtasks != null && subtasks.isEmpty()) {
             this.subtasksObservable.addAll(subtasks);
+            hasDetails.set(true);
         }
         getSubtasks();
     }
+
     public TaskViewModel(ObservableField<Task> task, TaskRepository taskRepository) {
         this(task, Collections.emptyList(), taskRepository);
     }
@@ -45,10 +49,27 @@ public class TaskViewModel {
         return taskObservable;
     }
 
+    public ObservableField<Boolean> getIsViewExpanded() {
+        return isViewExpanded;
+    }
+
+    public ObservableField<Boolean> getHasDetails() {
+        return hasDetails;
+    }
+
+
+    public void toggleShowExpandedView() {
+        Boolean prevStatus = isViewExpanded.get();
+        if (prevStatus == null) {
+            prevStatus = true;
+        }
+        isViewExpanded.set(!prevStatus);
+    }
 
     public ObservableList<TaskViewModel> getSubtasksViewModels() {
         return subtasksObservable;
     }
+
 
     public void getSubtasks() {
         taskRepository.getAllSubtasks(Objects.requireNonNull(taskObservable.get()).getId())
@@ -58,7 +79,10 @@ public class TaskViewModel {
                 .doOnNext(next -> Log.i(TAG, Objects.requireNonNull(Thread.currentThread().getThreadGroup()).getName()))
                 .subscribe(taskViewModels -> {
                     subtasksObservable.clear();
-                    subtasksObservable.addAll(taskViewModels);
+                    if (!taskViewModels.isEmpty()) {
+                        subtasksObservable.addAll(taskViewModels);
+                        hasDetails.set(true);
+                    }
                 }, throwable -> Log.e(TAG, throwable.getMessage()));
     }
 
@@ -70,6 +94,14 @@ public class TaskViewModel {
 
     public void setTask(ObservableField<Task> task) {
         this.taskObservable = task;
+    }
+
+    public void updateTaskOrder(int order) {
+        Task task = taskObservable.get();
+        if (task != null) {
+            task.setOrder(order);
+            taskRepository.updateTask(task);
+        }
     }
 
     public void removeTask() {

@@ -10,23 +10,14 @@ import androidx.databinding.ObservableList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
 import com.example.todo.databinding.ItemTaskBinding;
 import com.example.todo.model.Task;
 import com.example.todo.viewModel.TaskViewModel;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-
-import io.reactivex.rxjava3.core.BackpressureStrategy;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
     ObservableList<TaskViewModel> taskList;
-    private final PublishSubject<List<Task>> orderObservable = PublishSubject.create();
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -55,8 +46,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
                 Task task = taskViewModel.getTask().get();
                 if (task != null) {
                     taskViewModel.toggleTaskStatus(view);
-
                 }
+
             });
         }
 
@@ -77,6 +68,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
             @Override
             public void onItemRangeChanged(ObservableList<TaskViewModel> sender, int positionStart, int itemCount) {
                 notifyItemRangeChanged(positionStart, itemCount);
+
             }
 
             @Override
@@ -123,20 +115,25 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> 
 
     public void notifyAboutOrderChange(int from, int to) {
         notifyItemMoved(from, to);
-        Collections.swap(this.taskList, from, to);
-    }
 
 
-    public Flowable<List<Task>> getTasksOrderObservable() {
-        return orderObservable.toFlowable(BackpressureStrategy.LATEST);
+        if (to < from) {
+            for (int i = to; i < taskList.size(); i++) {
+                TaskViewModel taskViewModel = getItem(i);
+                taskViewModel.updateTaskOrder(i + 1);
+            }
+        } else {
+            for (int i = from+1; i <= to; i++) {
+                TaskViewModel taskViewModel = getItem(i);
+                taskViewModel.updateTaskOrder(i - 1);
+            }
+        }
+        getItem(from).updateTaskOrder(to);
+
+
+        //Collections.swap(this.taskList, from, to);
     }
 
-    public void saveTaskOrder() {
-        orderObservable.onNext(taskList.stream()
-                .map(viewModel -> viewModel.getTask().get())
-                .collect(Collectors.toList())
-        );
-    }
 
     @Override
     public long getItemId(int position) {

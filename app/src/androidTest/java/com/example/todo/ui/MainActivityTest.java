@@ -96,12 +96,15 @@ public class MainActivityTest {
     }
 
     @Test
-    public void canCompleteTaskIfSubtasksCompleted_onItemClick() {
+    public void canCompleteTaskIfSubtasksCompleted_onItemClick() throws InterruptedException {
         long id = taskRepository.insertTaskAndGetId(new Task("Task")).blockingGet();
         Task subtask = new Task("subtask");
         subtask.setParentId(id);
         taskRepository.insertTaskAndGetId(subtask).blockingSubscribe();
-        onView(allOf(withId(R.id.subtasks_rv), withParent(withRecyclerView(R.id.rvTasks).atPosition(0))))
+        //Thread.sleep(1000);
+        onView(allOf(withId(R.id.expand_button), withParent(withParent(withParent(withRecyclerView(R.id.rvTasks).atPosition(0))))))
+                .perform(click());
+        onView(allOf(withId(R.id.subtasks_rv), withParent(withParent(withRecyclerView(R.id.rvTasks).atPosition(0)))))
                .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
         onView(withId(R.id.rvTasks))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));

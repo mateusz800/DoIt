@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <import type="android.view.View"/>
         <variable
             name="viewModel"
             type="com.example.todo.viewModel.TaskViewModel" />
@@ -38,17 +38,44 @@
                     android:id="@+id/task_title_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:background="@{viewModel.task.status ? @drawable/strike_through : null}"
                     android:text="@{viewModel.task.title}"
                     tools:text="Do some task" />
 
+                <ImageButton
+                    android:id="@+id/expand_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="48dp"
+                    android:minHeight="48dp"
+                    android:visibility="@{viewModel.hasDetails ? View.VISIBLE : View.INVISIBLE, default=invisible}"
+                    android:onClick="@{(view) -> viewModel.toggleShowExpandedView()}"
+                    android:src="@{viewModel.isViewExpanded? @android:drawable/arrow_up_float: @android:drawable/arrow_down_float}" />
+
             </LinearLayout>
         </FrameLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/subtasks_rv"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="@{viewModel.isViewExpanded? View.VISIBLE:View.GONE}"
+            >
+
+            <TextView
+                android:id="@+id/task_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{viewModel.task.description}"
+                tools:text="Task description"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/subtasks_rv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
     </LinearLayout>
 </layout>
 

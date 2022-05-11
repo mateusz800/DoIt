@@ -11,7 +11,7 @@ import com.example.todo.model.Task;
 import com.example.todo.repository.TaskRepository;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -45,6 +44,7 @@ public class MainViewModel extends ViewModel {
 
     private void initSampleTasks() {
         Task shoppingTask = new Task("shopping");
+        shoppingTask.setDescription("Shop for the party");
         taskRepository.insertTaskAndGetId(shoppingTask)
                 .subscribeOn(Schedulers.io())
                 .subscribe(id -> {
@@ -76,6 +76,7 @@ public class MainViewModel extends ViewModel {
     }
 
     public void listenForTasksOrderChange(Flowable<List<Task>> tasksFlowable) {
+        /*
         tasksFlowable.subscribeOn(Schedulers.io())
                 .subscribe(list -> Observable.fromIterable(list)
                         .subscribe(task -> {
@@ -83,6 +84,8 @@ public class MainViewModel extends ViewModel {
                             taskRepository.updateTask(task);
                         })
                 );
+
+         */
     }
 
     private void getAllTasks() {
@@ -113,10 +116,10 @@ public class MainViewModel extends ViewModel {
     }
 
     private Map<Task, List<Task>> extractSubtasks(List<Task> taskList) {
-        Map<Task, List<Task>> result = new HashMap<>();
+        Map<Task, List<Task>> result = new LinkedHashMap<>();
         taskList.forEach(task -> {
             List<Task> subtasks = result.get(task);
-            if(task.getParentId() == null) {
+            if (task.getParentId() == null) {
                 if (subtasks == null) {
                     subtasks = Collections.singletonList(task);
                 } else {
