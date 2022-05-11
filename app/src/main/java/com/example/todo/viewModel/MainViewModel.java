@@ -21,7 +21,6 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -75,19 +74,6 @@ public class MainViewModel extends ViewModel {
         taskRepository.insertTask(task);
     }
 
-    public void listenForTasksOrderChange(Flowable<List<Task>> tasksFlowable) {
-        /*
-        tasksFlowable.subscribeOn(Schedulers.io())
-                .subscribe(list -> Observable.fromIterable(list)
-                        .subscribe(task -> {
-                            task.setOrder(list.indexOf(task));
-                            taskRepository.updateTask(task);
-                        })
-                );
-
-         */
-    }
-
     private void getAllTasks() {
         compositeDisposable.add(taskRepository.getAllTasks()
                 .subscribeOn(Schedulers.io())
@@ -107,27 +93,32 @@ public class MainViewModel extends ViewModel {
     private List<TaskViewModel> excludeSubtasksAndConvertToViewModel(List<Task> tasks) {
         Map<Task, List<Task>> tasksOrdered = extractSubtasks(tasks);
         return tasksOrdered.keySet().stream()
-                .map(key -> new TaskViewModel(new ObservableField<>(key),
-                        tasksOrdered.get(key).stream()
-                                .map(subtask -> new TaskViewModel(new ObservableField<>(subtask), null, taskRepository))
-                                .collect(Collectors.toList()),
-                        taskRepository))
+                .map(key -> {
+                    if (Objects.requireNonNull(tasksOrdered.get(key)).isEmpty()) {
+                        return new TaskViewModel(new ObservableField<>(key), null, taskRepository);
+                    } else {
+                        return new TaskViewModel(new ObservableField<>(key),
+                                tasksOrdered.get(key).stream()
+                                        .map(subtask -> new TaskViewModel(new ObservableField<>(subtask), null, taskRepository))
+                                        .collect(Collectors.toList()),
+                                taskRepository);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
     private Map<Task, List<Task>> extractSubtasks(List<Task> taskList) {
         Map<Task, List<Task>> result = new LinkedHashMap<>();
         taskList.forEach(task -> {
-            List<Task> subtasks = result.get(task);
             if (task.getParentId() == null) {
-                if (subtasks == null) {
-                    subtasks = Collections.singletonList(task);
-                } else {
+                result.put(task, Collections.emptyList());
+            } else {
+                List<Task> subtasks = result.get(task);
+                if (subtasks != null) {
                     subtasks.add(task);
+                    result.put(task, subtasks);
                 }
-                result.put(task, subtasks);
             }
-
         });
         return result;
 

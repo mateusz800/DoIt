@@ -10,6 +10,7 @@ import androidx.databinding.ObservableList;
 
 import com.example.todo.model.Task;
 import com.example.todo.repository.TaskRepository;
+import com.example.todo.util.SessionData;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class TaskViewModel {
     private static final String TAG = "TaskViewModel";
 
+
     private ObservableField<Task> taskObservable;
     private final ObservableArrayList<TaskViewModel> subtasksObservable = new ObservableArrayList<>();
     private final ObservableField<Boolean> isViewExpanded = new ObservableField<>(false);
@@ -34,8 +36,12 @@ public class TaskViewModel {
     public TaskViewModel(ObservableField<Task> task, List<TaskViewModel> subtasks, TaskRepository taskRepository) {
         this.taskObservable = task;
         this.taskRepository = taskRepository;
-        if (subtasks != null && subtasks.isEmpty()) {
+        if (subtasks != null && !subtasks.isEmpty()) {
             this.subtasksObservable.addAll(subtasks);
+            hasDetails.set(true);
+        }
+        if(SessionData.expandedTasksIds.contains(Objects.requireNonNull(task.get()).getId())){
+            isViewExpanded.set(true);
             hasDetails.set(true);
         }
         getSubtasks();
@@ -63,7 +69,14 @@ public class TaskViewModel {
         if (prevStatus == null) {
             prevStatus = true;
         }
-        isViewExpanded.set(!prevStatus);
+        boolean newStatus = !prevStatus;
+        isViewExpanded.set(newStatus);
+        long taskId = Objects.requireNonNull(taskObservable.get()).getId();
+        if(newStatus){
+            SessionData.expandedTasksIds.add(taskId);
+        } else {
+            SessionData.expandedTasksIds.remove(taskId);
+        }
     }
 
     public ObservableList<TaskViewModel> getSubtasksViewModels() {
